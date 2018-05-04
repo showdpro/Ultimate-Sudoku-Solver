@@ -1,6 +1,7 @@
 package com.example.john.sudokusolver;
 
 import android.annotation.SuppressLint;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -381,14 +382,45 @@ class SudokuPuzzleSolver {
     public static final int COLUMN  = 2;
 
     private int[][] mPuzzle;
-    private int[][] partiallySolvedPuzzle;
+    private int[][] mPartiallySolvedPuzzle;
     private GridIterator gridIterator;
     private RowIterator rowIterator;
     private ColumnIterator columnIterator;
     private SearchHelper searchHelper;
 
+    // Values for working with Android Bundle, to coordinate with the app's lifecycle
+    private static final String ORIGINAL_PUZZLE_KEY = "original puzzle";
+    private static final String PARTIALLY_SOLVED_PUZZLE_KEY = "partially solved puzzle";
+
     public SudokuPuzzleSolver() {
-        partiallySolvedPuzzle = new int[MAX_LENGTH][MAX_LENGTH];
+        mPuzzle = new int[0][0];
+        mPartiallySolvedPuzzle = new int[MAX_LENGTH][MAX_LENGTH];
+    }
+
+    public void restore(@NonNull Bundle in) {
+        Object[] serializableArray;
+
+        serializableArray = (Object[]) in.getSerializable(ORIGINAL_PUZZLE_KEY);
+        if (serializableArray != null) {
+            mPuzzle = new int[serializableArray.length][];
+
+            for (int i = 0; i < serializableArray.length; i++) {
+                mPuzzle[i] = (int[]) serializableArray[i];
+            }
+        }
+        serializableArray = (Object[]) in.getSerializable(PARTIALLY_SOLVED_PUZZLE_KEY);
+        if (serializableArray != null) {
+            mPartiallySolvedPuzzle = new int[serializableArray.length][];
+
+            for (int i = 0; i < serializableArray.length; i++) {
+                mPartiallySolvedPuzzle[i] = (int[]) serializableArray[i];
+            }
+        }
+    }
+
+    public void save(Bundle out) {
+        out.putSerializable(ORIGINAL_PUZZLE_KEY, mPuzzle);
+        out.putSerializable(PARTIALLY_SOLVED_PUZZLE_KEY, mPartiallySolvedPuzzle);
     }
 
     public void printPartialSolution() {
@@ -416,7 +448,7 @@ class SudokuPuzzleSolver {
         for (int i = 0; i < MAX_LENGTH; i++) {
             for (int j = 0; j < MAX_LENGTH; j++) {
                 A[i][j] = mPuzzle[i][j] != 0 ? -mPuzzle[i][j]
-                        : getDigit(partiallySolvedPuzzle[i][j]);
+                        : getDigit(mPartiallySolvedPuzzle[i][j]);
             }
         }
         return A;
@@ -431,12 +463,12 @@ class SudokuPuzzleSolver {
 
         for (int i = 0; i < MAX_LENGTH; i++) {
             for (int j = 0; j < MAX_LENGTH; j++) {
-                partiallySolvedPuzzle[i][j] =  this.mPuzzle[i][j] == 0 ? ALL_DIGITS :
+                mPartiallySolvedPuzzle[i][j] =  this.mPuzzle[i][j] == 0 ? ALL_DIGITS :
                         VALUE[mPuzzle[i][j]];
             }
-            partitionsRow[i] = Arrays.copyOf(partiallySolvedPuzzle[i], MAX_LENGTH);
-            partitionsColumn[i] = Arrays.copyOf(partiallySolvedPuzzle[i], MAX_LENGTH);
-            partitionsGrid[i] = Arrays.copyOf(partiallySolvedPuzzle[i], MAX_LENGTH);
+            partitionsRow[i] = Arrays.copyOf(mPartiallySolvedPuzzle[i], MAX_LENGTH);
+            partitionsColumn[i] = Arrays.copyOf(mPartiallySolvedPuzzle[i], MAX_LENGTH);
+            partitionsGrid[i] = Arrays.copyOf(mPartiallySolvedPuzzle[i], MAX_LENGTH);
         }
 
         gridIterator = new GridIterator(partitionsGrid);
@@ -469,8 +501,10 @@ class SudokuPuzzleSolver {
     }
 
     public int[][] getPartiallySolvedPuzzle() {
-        return partiallySolvedPuzzle;
+        return mPartiallySolvedPuzzle;
     }
+
+    public int[][] getOriginalPuzzle() { return mPuzzle;}
 
     /**
      *
@@ -561,7 +595,7 @@ class SudokuPuzzleSolver {
                                         "Attempting to modify original digits @ (row=%d, column=%d", i, j));
 
                             // Update the puzzle
-                            partiallySolvedPuzzle[i][j] &= newValue;
+                            mPartiallySolvedPuzzle[i][j] &= newValue;
                         }
                     }
                 }
@@ -594,9 +628,9 @@ class SudokuPuzzleSolver {
     }
 
     boolean isSolved() {
-        for (int i = 0; i < partiallySolvedPuzzle.length; i++) {
-            for (int j = 0; j < partiallySolvedPuzzle[i].length; j++) {
-                if (getLength(partiallySolvedPuzzle[i][j]) != 1) {
+        for (int i = 0; i < mPartiallySolvedPuzzle.length; i++) {
+            for (int j = 0; j < mPartiallySolvedPuzzle[i].length; j++) {
+                if (getLength(mPartiallySolvedPuzzle[i][j]) != 1) {
                     return false;
                 }
             }
@@ -693,7 +727,7 @@ class SudokuPuzzleSolver {
 
                 // Make deductions in the puzzle
                 if (!searchHelper.isElementTypeAugment(it.element)) {
-                    partiallySolvedPuzzle[i][j] &= pv;
+                    mPartiallySolvedPuzzle[i][j] &= pv;
                 }
             }
 
@@ -718,7 +752,7 @@ class SudokuPuzzleSolver {
         int currentIndex;
 
         while (it.nextPartitionElement()) {
-            if (!searchHelper.performAdd(partiallySolvedPuzzle[it.i][it.j],
+            if (!searchHelper.performAdd(mPartiallySolvedPuzzle[it.i][it.j],
                     startingIndex,
                     it.element)) {
                 continue;
