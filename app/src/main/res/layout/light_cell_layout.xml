@@ -7,8 +7,8 @@
     android:background="@color/cell_light_background"
     >
 
-    <TextView
-        android:id="@+id/largeDigit"
+    <EditText
+        android:tag="@string/cell_editable_digit_tag"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"

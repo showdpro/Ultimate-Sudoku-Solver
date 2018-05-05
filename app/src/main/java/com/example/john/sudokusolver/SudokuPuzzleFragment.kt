@@ -9,8 +9,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.GridLayout
-import kotlinx.android.synthetic.main.light_cell_layout.view.*
 import kotlinx.android.synthetic.main.sudoku_puzzle_grid_layout.view.*
 
 /**
@@ -24,13 +24,13 @@ class SudokuPuzzleFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-//        if (savedInstanceState != null)
-//            mSudokuSolver.restore(savedInstanceState)
+        if (savedInstanceState != null)
+            mSudokuSolver.restore(savedInstanceState)
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
-//        mSudokuSolver.save(outState)
+        mSudokuSolver.save(outState)
     }
 
     @SuppressLint("NewApi")
@@ -63,24 +63,21 @@ class SudokuPuzzleFragment : Fragment() {
         }
 
         // Populate the cells in the puzzle layout
-        var digit: String
-        var cellView: View
         for (row in 0 until puzzleLayout.rowCount) {
             for (column in 0 until puzzleLayout.columnCount) {
-                cellView = inflater.inflate(
+                val cellView = inflater.inflate(
                         if ( (column / 3 + row / 3) % 2 == 0) R.layout.light_cell_layout
                         else R.layout.dark_cell_layout,
                         null)
                 // TODO copy the contents of puzzle data into cell
+                cellView.findViewWithTag<EditText>(getString(R.string.cell_editable_digit_tag))?.
+                        setText((row * 9 + column + 1).toString())
 
-                digit = (column + 1).toString(10)
-                cellView.largeDigit.text = digit
-
+                // TODO set IME of editText to editText of Previous Cell
                 // Add the cell to the puzzle layout
                 puzzleLayout.addView(cellView, GridLayout.LayoutParams(layoutParams))
             }
         }
-
         return view
     }
 }
