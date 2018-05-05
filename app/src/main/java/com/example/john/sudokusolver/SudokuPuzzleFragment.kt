@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.GridLayout
 import kotlinx.android.synthetic.main.sudoku_puzzle_grid_layout.view.*
@@ -62,6 +63,9 @@ class SudokuPuzzleFragment : Fragment() {
             }
         }
 
+        var editText: EditText?
+        var previousEditText: EditText? = null
+
         // Populate the cells in the puzzle layout
         for (row in 0 until puzzleLayout.rowCount) {
             for (column in 0 until puzzleLayout.columnCount) {
@@ -70,14 +74,27 @@ class SudokuPuzzleFragment : Fragment() {
                         else R.layout.dark_cell_layout,
                         null)
                 // TODO copy the contents of puzzle data into cell
-                cellView.findViewWithTag<EditText>(getString(R.string.cell_editable_digit_tag))?.
-                        setText((row * 9 + column + 1).toString())
+                editText = cellView.findViewWithTag(getString(R.string.cell_editable_digit_tag))
+                editText?.setText((row * 9 + column + 1).toString())
 
-                // TODO set IME of editText to editText of Previous Cell
+                // Set the field navigation behavior for the editable digits
+                editText?.imeOptions =
+                        if (column != puzzleLayout.columnCount - 1 || row != puzzleLayout.rowCount - 1)
+                            EditorInfo.IME_ACTION_NEXT
+                        else
+                            EditorInfo.IME_ACTION_DONE
+
+                editText.id = puzzleLayout.rowCount * row + column + 1
+                previousEditText?.id = editText.id
+                previousEditText = editText
+
                 // Add the cell to the puzzle layout
                 puzzleLayout.addView(cellView, GridLayout.LayoutParams(layoutParams))
+
+
             }
         }
+//        puzzleLayout.findViewById<EditText>(41)?.setText("99")
         return view
     }
 }
