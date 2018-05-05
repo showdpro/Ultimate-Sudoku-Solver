@@ -1,17 +1,16 @@
 package com.example.john.sudokusolver
 
+import android.annotation.SuppressLint
 import android.app.Fragment
+import android.content.res.Configuration
+import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.GridLayout
-import kotlinx.android.synthetic.main.light_cell_layout.view.largeDigit as light_large_digit
-import kotlinx.android.synthetic.main.dark_cell_layout.view.largeDigit as dark_large_digit
+import kotlinx.android.synthetic.main.light_cell_layout.view.*
 import kotlinx.android.synthetic.main.sudoku_puzzle_grid_layout.view.*
 
 /**
@@ -34,62 +33,54 @@ class SudokuPuzzleFragment : Fragment() {
 //        mSudokuSolver.save(outState)
     }
 
+    @SuppressLint("NewApi")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.sudoku_puzzle_grid_layout, container, false)
 
-        // TODO copy puzzle state into puzzleLayout
-//        puzzleLayout = view.puzzleLayout
-        puzzleLayout = view.findViewById<GridLayout>(R.id.puzzleLayout)
-        puzzleLayout.removeAllViews()
+        puzzleLayout = view.puzzleLayout
 
         puzzleLayout.columnCount = SudokuPuzzleSolver.MAX_LENGTH
         puzzleLayout.rowCount = SudokuPuzzleSolver.MAX_LENGTH
         puzzleLayout.orientation = GridLayout.HORIZONTAL
+        puzzleLayout.alignmentMode = GridLayout.ALIGN_BOUNDS
 
-        var layoutParams : GridLayout.LayoutParams
-
-        // Populate the cells in the puzzle layout
-        var cellView: View
-        for (row in 0 until puzzleLayout.rowCount) {
-            for (column in 0 until puzzleLayout.columnCount) {
-                if ( (column / 3 + row / 3) % 2 == 0) {
-                    cellView = inflater.inflate(R.layout.light_cell_layout, puzzleLayout, false)
-//                    Log.d("gui", cellView.toString())
-
-                    // TODO copy the contents of puzzle data into cell
-//                    Log.d("data", (column+1).toString(10))
-                    val digit = (column + 1).toString(10)
-//                    cellView.findViewById<EditText>(R.id.largeDigit)?.setText(digit)
-                    cellView.dark_large_digit.setText(digit)
+        val layoutParams: GridLayout.LayoutParams = when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
+                val rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f)
+                val columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f)
+                GridLayout.LayoutParams(rowSpec, columnSpec)
+            }
+            else -> {
+                val width = if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                    val size = Point()
+                    activity.windowManager.defaultDisplay.getSize(size)
+                    size.x / SudokuPuzzleSolver.MAX_LENGTH
                 } else {
-                    cellView = inflater.inflate(R.layout.dark_cell_layout, puzzleLayout, false)
-
-                    // TODO copy the contents of puzzle data into cell
-//                    Log.d("data", (column+1).toString(10))
-                    val digit = (column + 1).toString(10)
-//                    cellView.findViewById<EditText>(R.id.largeDigit)?.setText(digit)
-                    cellView.light_large_digit.setText(digit)
+                    ViewGroup.LayoutParams.WRAP_CONTENT
                 }
-
-                // Add the cell to the puzzle layout
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && false) {
-                    layoutParams = GridLayout.LayoutParams(
-                            GridLayout.spec(row, 1, 1f),
-                            GridLayout.spec(column, 1, 1f))
-                } else {
-                    layoutParams = GridLayout.LayoutParams(
-                            ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-                                    ViewGroup.LayoutParams.WRAP_CONTENT))
-                    layoutParams.setGravity(Gravity.NO_GRAVITY)
-                }
-                puzzleLayout.addView(cellView, layoutParams)
+                GridLayout.LayoutParams(ViewGroup.LayoutParams(width, width))
             }
         }
 
-//        // Resize the GridLayout to wrap contents
-//        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP && false) {
-//            puzzleLayout.viewTreeObserver
-//        }
+        // Populate the cells in the puzzle layout
+        var digit: String
+        var cellView: View
+        for (row in 0 until puzzleLayout.rowCount) {
+            for (column in 0 until puzzleLayout.columnCount) {
+                cellView = inflater.inflate(
+                        if ( (column / 3 + row / 3) % 2 == 0) R.layout.light_cell_layout
+                        else R.layout.dark_cell_layout,
+                        null)
+                // TODO copy the contents of puzzle data into cell
+
+                digit = (column + 1).toString(10)
+                cellView.largeDigit.text = digit
+
+                // Add the cell to the puzzle layout
+                puzzleLayout.addView(cellView, GridLayout.LayoutParams(layoutParams))
+            }
+        }
+
         return view
     }
 }
