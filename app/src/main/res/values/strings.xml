@@ -2,4 +2,6 @@
     <string name="app_name">Sudoku Solver</string>
     <string name="puzzle_content_constraint">H,1:1</string>
     <string name="cell_editable_digit_tag">largeDigit</string>
+    <string name="solveSuccess">Puzzle Solved!</string>
+    <string name="solveFail">Puzzle Unsolved</string>
 </resources>

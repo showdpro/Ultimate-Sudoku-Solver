@@ -29,7 +29,6 @@ class SudokuGridLayout: GridLayout {
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int): super(context, attrs, defStyleAttr, defStyleRes)
 
     init {
-        // TODO initialize helper variables for painting
         setWillNotDraw(false)
         foreGroundPaint.color = Color.BLACK
     }

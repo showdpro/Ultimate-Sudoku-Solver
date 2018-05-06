@@ -7,6 +7,7 @@ package com.example.john.sudokusolver
 import android.arch.lifecycle.ViewModelProviders
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 
 /**
@@ -28,6 +29,9 @@ class MainActivity : AppCompatActivity() {
 
             // Access the solving Logic. It is quick, so work loads on background threads are not used here
             val success = mPuzzleModel.solveCurrentPuzzle()
+
+            Toast.makeText(this, if (success) R.string.solveSuccess else R.string.solveFail,
+                    Toast.LENGTH_SHORT).show()
 
             mPuzzleViewCallback?.refreshPuzzleView()
         }
