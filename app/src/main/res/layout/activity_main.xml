@@ -12,8 +12,8 @@
         tools:context="com.example.john.sudokusolver.MainActivity">
 
         <fragment
-            android:id="@+id/puzzleContent"
             class="com.example.john.sudokusolver.SudokuPuzzleFragment"
+            android:id="@+id/puzzleContent"
             android:layout_width="0dp"
             android:layout_height="0dp"
             app:layout_constraintBottom_toBottomOf="parent"

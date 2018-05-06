@@ -1,29 +1,82 @@
+/*
+ * Created by John Masiello. Copyright (c) 2018
+ */
+
 package com.example.john.sudokusolver;
 
 import com.example.john.sudokusolver.SudokuPuzzleSolver.SudokuPuzzleSolution;
 
+import java.util.Arrays;
+
 /**
- * Created by john on 5/5/18.
- * Class that mocks a repository
+ * Mocks a repository
  */
 public class SudokuPuzzleRepository {
     public static final int[][ ] DEFAULT_PUZZLE =
-            {
-                    {5, 0, 0, 0, 0, 9, 0, 2, 6},
-                    {0, 0, 9, 0, 8, 0, 0, 0, 0},
-                    {0, 6, 0, 0, 0, 0, 9, 0, 1},
-                    {0, 0, 0, 0, 5, 4, 0, 0, 3},
-                    {7, 0, 1, 3, 6, 8, 2, 0, 5},
-                    {3, 0, 0, 7, 2, 0, 0, 0, 0},
-                    {1, 0, 3, 0, 0, 0, 0, 4, 0},
-                    {0, 0, 0, 0, 7, 0, 1, 0, 0},
-                    {9, 8, 0, 6, 0, 0, 0, 0, 7}
-            };
+    {
+            {5, 0, 0, 0, 0, 9, 0, 2, 6},
+            {0, 0, 9, 0, 8, 0, 0, 0, 0},
+            {0, 6, 0, 0, 0, 0, 9, 0, 1},
+            {0, 0, 0, 0, 5, 4, 0, 0, 3},
+            {7, 0, 1, 3, 6, 8, 2, 0, 5},
+            {3, 0, 0, 7, 2, 0, 0, 0, 0},
+            {1, 0, 3, 0, 0, 0, 0, 4, 0},
+            {0, 0, 0, 0, 7, 0, 1, 0, 0},
+            {9, 8, 0, 6, 0, 0, 0, 0, 7}
+    };
 
-    int[][] currentPuzzle;
-    SudokuPuzzleSolution sudokuPuzzleSolution;
+    private int[][] currentPuzzle;
+    /**
+     * The puzzle that will appear in the view;
+     */
+    private int[][] visiblePuzzle;
+    private SudokuPuzzleSolution sudokuPuzzleSolution;
 
     public SudokuPuzzleRepository() {
-        currentPuzzle = DEFAULT_PUZZLE;
+        setCurrentPuzzle(DEFAULT_PUZZLE);
+    }
+
+    /**
+     *
+     * @return The current Puzzle
+     */
+    public int[][] getCurrentPuzzle() {
+        if (currentPuzzle == null) {
+            // Create a blank puzzle
+            currentPuzzle = new int[SudokuPuzzleSolver.MAX_LENGTH][SudokuPuzzleSolver.MAX_LENGTH];
+        }
+        return currentPuzzle;
+    }
+
+    /**
+     *
+     * @param puzzle Sets a copy of puzzle to the current puzzle
+     */
+    public void setCurrentPuzzle(int[][] puzzle) {
+        currentPuzzle = new int[SudokuPuzzleSolver.MAX_LENGTH][SudokuPuzzleSolver.MAX_LENGTH];
+
+        for (int i = 0; i < puzzle.length; i++) {
+            currentPuzzle[i] = Arrays.copyOf(puzzle[i],
+                    puzzle[i].length);
+        }
+    }
+
+    public SudokuPuzzleSolution getSudokuPuzzleSolution() {
+        return sudokuPuzzleSolution;
+    }
+
+    public void setSudokuPuzzleSolution(SudokuPuzzleSolution sudokuPuzzleSolution) {
+        this.sudokuPuzzleSolution = sudokuPuzzleSolution;
+    }
+
+    public int[][] getVisiblePuzzle() {
+        if (visiblePuzzle == null) {
+            visiblePuzzle = getCurrentPuzzle();
+        }
+        return visiblePuzzle;
+    }
+
+    public void setVisiblePuzzle(int[][] visiblePuzzle) {
+        this.visiblePuzzle = visiblePuzzle;
     }
 }

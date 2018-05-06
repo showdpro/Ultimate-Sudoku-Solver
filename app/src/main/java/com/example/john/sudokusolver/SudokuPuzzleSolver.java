@@ -1,3 +1,7 @@
+/*
+ * Created by John Masiello. Copyright (c) 2018
+ */
+
 package com.example.john.sudokusolver;
 
 import android.annotation.SuppressLint;
@@ -10,7 +14,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 
 /**
- * Created by john on 5/3/18.
  * Contains the logic to solve Sudoku puzzles
  */
 
@@ -245,12 +248,29 @@ public class SudokuPuzzleSolver {
          * <p>Invariant: Let X be equal to {@link #getDigit(int) getDigit}
          * (y), where y is any element in the array. Then X has no fractional part implies X
          * is either a solved digit or an original digit in the puzzle</p>
+         * @see #getDigit(int)
+         * @see #getCertainDigit(int)
          */
-        public final int[][] partialSolution;
+        private final int[][] partialSolution;
+        private int[][] partialSolutionSolvedDigits;
 
         public SudokuPuzzleSolution(boolean isSolved, int[][] partialSolution) {
             this.isSolved = isSolved;
             this.partialSolution = partialSolution;
+        }
+
+        public int[][] getPartialSolutionSolvedDigits() {
+            if (partialSolutionSolvedDigits == null) {
+                partialSolutionSolvedDigits = new int[MAX_LENGTH][MAX_LENGTH];
+
+                for (int i = 0; i < MAX_LENGTH; i++) {
+                    for (int j = 0; j < MAX_LENGTH; j++) {
+                        partialSolutionSolvedDigits[i][j] =
+                        SudokuPuzzleSolver.getCertainDigit(partialSolution[i][j]);
+                    }
+                }
+            }
+            return partialSolutionSolvedDigits;
         }
     }
 
@@ -526,8 +546,28 @@ public class SudokuPuzzleSolver {
                         columnIterator;
     }
 
-    float getDigit(int value) {
-        return (float) (Math.log(value) / Math.log(2)) + 1;
+    /**
+     *
+     * @param value A value with 1-bits indicating possible or uncertain digits
+     * @return Maps value to a floating point value as result. If result has no fractional part
+     *  and is not 0, then it is the only possible, or certain, digit
+     */
+    static float getDigit(int value) {
+        return value <= 0 ? 0f : (float) (Math.log(value) / Math.log(2)) + 1;
+    }
+
+    /**
+     *
+     * @return 0 if value does not have exactly 1 digit; otherwise
+     * {@link #getDigit(int) getDigit(value)}
+     */
+    public static int getCertainDigit(int value) {
+        float digit = getDigit(value);
+        return digit > (int)digit ? 0 : (int) digit;
+    }
+
+    public static int clipDigit(int raw) {
+        return (raw < 0 ? 0 : raw) % (MAX_LENGTH + 1);
     }
 
     /**

@@ -1,3 +1,7 @@
+/*
+ * Created by John Masiello. Copyright (c) 2018
+ */
+
 package com.example.john.sudokusolver
 
 import android.annotation.SuppressLint
@@ -15,16 +19,19 @@ import android.widget.EditText
 import android.widget.GridLayout
 import kotlinx.android.synthetic.main.sudoku_puzzle_grid_layout.view.*
 
-/**
- * Created by john on 5/4/18.
- */
+import com.example.john.sudokusolver.SudokuPuzzleSolver.MAX_LENGTH
 
-class SudokuPuzzleFragment : Fragment() {
-    // TODO put access to the solver in the viewmodel
+/**
+ * The fragment containing the puzzle
+ */
+class SudokuPuzzleFragment : Fragment(), PuzzleViewCallback {
     private lateinit var mSudokuPuzzleViewModel: SudokuPuzzleViewModel
     private lateinit var puzzleLayout: GridLayout
 
-    // TODO a dump to the view model on an onPause
+    override fun onPause() {
+        super.onPause()
+        mSudokuPuzzleViewModel.setVisiblePuzzle(capturePuzzleFromView())
+    }
 
     @SuppressLint("NewApi")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -32,8 +39,8 @@ class SudokuPuzzleFragment : Fragment() {
 
         puzzleLayout = view.puzzleLayout
 
-        puzzleLayout.columnCount = SudokuPuzzleSolver.MAX_LENGTH
-        puzzleLayout.rowCount = SudokuPuzzleSolver.MAX_LENGTH
+        puzzleLayout.columnCount = MAX_LENGTH
+        puzzleLayout.rowCount = MAX_LENGTH
         puzzleLayout.orientation = GridLayout.HORIZONTAL
         puzzleLayout.alignmentMode = GridLayout.ALIGN_BOUNDS
 
@@ -49,7 +56,7 @@ class SudokuPuzzleFragment : Fragment() {
                 && activity != null) {
                     val size = Point()
                     activity.windowManager.defaultDisplay.getSize(size)
-                    size.x / SudokuPuzzleSolver.MAX_LENGTH
+                    size.x / MAX_LENGTH
                 } else {
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 }
@@ -97,8 +104,43 @@ class SudokuPuzzleFragment : Fragment() {
         mSudokuPuzzleViewModel = ViewModelProviders.of(activity!!).get(SudokuPuzzleViewModel().javaClass)
 
         // Copy the values of the puzzle into the puzzle layout
-        val currentPuzzle = mSudokuPuzzleViewModel.sudokuPuzzleRepository.currentPuzzle
+        refreshPuzzleView()
+    }
 
+    override fun capturePuzzleFromView(): Array<IntArray> {
+        val result = Array(MAX_LENGTH, {_ -> IntArray(MAX_LENGTH, {_ -> 0})})
+
+        applyToLargeDigits(
+                {editText, row, column ->
+                    editText.editableText.toString().toIntOrNull()?.let {
+                        result[row][column] = SudokuPuzzleSolver.clipDigit(it)}})
+        return result
+    }
+
+    override fun refreshPuzzleView() {
+        val puzzle = mSudokuPuzzleViewModel.getVisiblePuzzle()
+
+        applyToLargeDigits(
+                {editText, row, column ->
+                    editText.setText(digitToString(puzzle[row][column]))})
+    }
+
+    /**
+     * @return (row, column) coordinates
+     */
+    private fun getCellCoordinates(childIndex: Int): Pair<Int, Int> {
+        return Pair(childIndex / MAX_LENGTH, childIndex % MAX_LENGTH)
+    }
+
+    private fun digitToString(digit: Int): CharSequence {
+        return if (digit == 0) "" else digit.toString()
+    }
+
+    /**
+     * Inline function to handle repetitive iteration code over the cells
+     * @param f Lambda function to be applied to each digit in each cell
+     */
+    private inline fun applyToLargeDigits(f: (EditText, row: Int, column: Int) -> Unit) {
         val childCount = puzzleLayout.childCount
         val largeDigitTag = getString(R.string.cell_editable_digit_tag)
         var pair: Pair<Int, Int>
@@ -106,18 +148,7 @@ class SudokuPuzzleFragment : Fragment() {
         for (i in 0 until childCount) {
             pair = getCellCoordinates(i)
             puzzleLayout.getChildAt(i).findViewWithTag<EditText>(largeDigitTag)?.
-                    setText(digitToString(currentPuzzle[pair.first][pair.second]))
+                    let { f(it, pair.first, pair.second) }
         }
-    }
-
-    /**
-     * @return (row, column) coordinates
-     */
-    private fun getCellCoordinates(childIndex: Int): Pair<Int, Int> {
-        return Pair(childIndex / SudokuPuzzleSolver.MAX_LENGTH, childIndex % SudokuPuzzleSolver.MAX_LENGTH)
-    }
-
-    private fun digitToString(digit: Int): CharSequence {
-        return if (digit == 0) "" else digit.toString()
     }
 }
