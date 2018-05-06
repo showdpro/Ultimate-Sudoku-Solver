@@ -46,8 +46,8 @@ class SudokuPuzzleFragment : Fragment(), PuzzleViewCallback {
 
         val layoutParams: GridLayout.LayoutParams = when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
-                val rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f)
-                val columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f)
+                val rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, GridLayout.FILL,1f)
+                val columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, GridLayout.FILL,1f)
                 GridLayout.LayoutParams(rowSpec, columnSpec)
             }
             else -> {
