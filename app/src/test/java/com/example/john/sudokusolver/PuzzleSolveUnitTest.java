@@ -125,7 +125,7 @@ public class PuzzleSolveUnitTest {
 
     @Test
     public void testSolverOpaque() throws Exception {
-        assertTrue(mSudokuPuzzleSolver.solve(mPuzzle));
+        assertTrue(mSudokuPuzzleSolver.solve(mPuzzle).isSolved);
     }
 
     @Test

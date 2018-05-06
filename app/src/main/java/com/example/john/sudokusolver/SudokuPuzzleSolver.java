@@ -14,7 +14,7 @@ import java.util.LinkedList;
  * Contains the logic to solve Sudoku puzzles
  */
 
-class SudokuPuzzleSolver {
+public class SudokuPuzzleSolver {
 
     abstract class SudokuIterator {
 
@@ -236,6 +236,25 @@ class SudokuPuzzleSolver {
     }
 
     /**
+     * A class to store the solution and its metaData
+     * @see #solve(int[][])
+     */
+    public static class SudokuPuzzleSolution {
+        public final boolean isSolved;
+        /**
+         * <p>Invariant: Let X be equal to {@link #getDigit(int) getDigit}
+         * (y), where y is any element in the array. Then X has no fractional part implies X
+         * is either a solved digit or an original digit in the puzzle</p>
+         */
+        public final int[][] partialSolution;
+
+        public SudokuPuzzleSolution(boolean isSolved, int[][] partialSolution) {
+            this.isSolved = isSolved;
+            this.partialSolution = partialSolution;
+        }
+    }
+
+    /**
      * Helper class that stores the search selections. A global instance of this will suffice
      * for all of the recursive steps of the Sudoku puzzle solving algorithm.
      */
@@ -377,9 +396,9 @@ class SudokuPuzzleSolver {
     static final int[] VALUE = {0, 1, 1 << 1, 1 << 2, 1 << 3, 1 << 4, 1 << 5, 1 << 6, 1 << 7, 1 << 8};
     static final int ALL_DIGITS = 0b111111111;
     static final int MAX_LENGTH = 9;
-    public static final int GRID    = 0;
-    public static final int ROW     = 1;
-    public static final int COLUMN  = 2;
+    static final int GRID    = 0;
+    static final int ROW     = 1;
+    static final int COLUMN  = 2;
 
     private int[][] mPuzzle;
     private int[][] mPartiallySolvedPuzzle;
@@ -388,46 +407,14 @@ class SudokuPuzzleSolver {
     private ColumnIterator columnIterator;
     private SearchHelper searchHelper;
 
-    // Values for working with Android Bundle, to coordinate with the app's lifecycle
-    private static final String ORIGINAL_PUZZLE_KEY = "original puzzle";
-    private static final String PARTIALLY_SOLVED_PUZZLE_KEY = "partially solved puzzle";
-
     public SudokuPuzzleSolver() {
-        mPuzzle = new int[0][0];
-        mPartiallySolvedPuzzle = new int[MAX_LENGTH][MAX_LENGTH];
     }
 
-    public void restore(@NonNull Bundle in) {
-        Object[] serializableArray;
-
-        serializableArray = (Object[]) in.getSerializable(ORIGINAL_PUZZLE_KEY);
-        if (serializableArray != null) {
-            mPuzzle = new int[serializableArray.length][];
-
-            for (int i = 0; i < serializableArray.length; i++) {
-                mPuzzle[i] = (int[]) serializableArray[i];
-            }
-        }
-        serializableArray = (Object[]) in.getSerializable(PARTIALLY_SOLVED_PUZZLE_KEY);
-        if (serializableArray != null) {
-            mPartiallySolvedPuzzle = new int[serializableArray.length][];
-
-            for (int i = 0; i < serializableArray.length; i++) {
-                mPartiallySolvedPuzzle[i] = (int[]) serializableArray[i];
-            }
-        }
-    }
-
-    public void save(Bundle out) {
-        out.putSerializable(ORIGINAL_PUZZLE_KEY, mPuzzle);
-        out.putSerializable(PARTIALLY_SOLVED_PUZZLE_KEY, mPartiallySolvedPuzzle);
-    }
-
-    public void printPartialSolution() {
+    void printPartialSolution() {
         printPartialSolution("0.000", "-");
     }
 
-    public void printPartialSolution(String decimalPattern, String negativePrefix) {
+    void printPartialSolution(String decimalPattern, String negativePrefix) {
         float[][] printPuzzle = fetchPrintablePuzzle();
 
         DecimalFormat decimalFormat = new DecimalFormat(decimalPattern);
@@ -442,7 +429,7 @@ class SudokuPuzzleSolver {
         }
     }
 
-    public float[][] fetchPrintablePuzzle() {
+    float[][] fetchPrintablePuzzle() {
         float[][] A = new float[MAX_LENGTH][MAX_LENGTH];
 
         for (int i = 0; i < MAX_LENGTH; i++) {
@@ -459,7 +446,16 @@ class SudokuPuzzleSolver {
         int[][] partitionsRow = new int[MAX_LENGTH][];
         int[][] partitionsColumn = new int[MAX_LENGTH][];
         int[][] partitionsGrid = new int[MAX_LENGTH][];
-        mPuzzle = puzzle;
+
+        // Copy puzzle
+        mPuzzle = new int[MAX_LENGTH][];
+
+        for (int i = 0; i < puzzle.length; i++) {
+            mPuzzle[i] = Arrays.copyOf(puzzle[i],
+                    puzzle[i].length);
+        }
+
+        mPartiallySolvedPuzzle = new int[MAX_LENGTH][MAX_LENGTH];
 
         for (int i = 0; i < MAX_LENGTH; i++) {
             for (int j = 0; j < MAX_LENGTH; j++) {
@@ -479,35 +475,48 @@ class SudokuPuzzleSolver {
     }
 
     /**
-     * <p>Invariant: The partial Solutions are stored in an array return by
-     * {@link #getPartiallySolvedPuzzle()}. Let X be equal to {@link #getDigit(int) getDigit}
-     * (y), where y is any element in the array. Then X has no fractional part implies X
-     * is either a solved digit or an original digit in the puzzle</p>
      * @param puzzle A MAX_LENGTH by MAX_LENGTH array containing the digits 1-9 of the puzzle
-     * @return true iff the puzzle is completely solved
+     * @return
      * @see #MAX_LENGTH
      */
-    public boolean solve(int[][] puzzle) {
+    public SudokuPuzzleSolution solve(int[][] puzzle) {
         initializePuzzle(puzzle);
         makeInitialDeductions();
+        boolean isSolved;
+
         try {
             makeGeneralDeductions();
-            return isSolved();
+            isSolved = isSolved();
         } catch (Exception e) {
             Log.e("Solver", e.getMessage());
             // The solver had an internal error
-            return false;
+            isSolved = false;
         }
+        return new SudokuPuzzleSolution(isSolved, copyPartiallySolvedPuzzle());
     }
 
-    public int[][] getPartiallySolvedPuzzle() {
+    private int[][] copyPartiallySolvedPuzzle() {
+        if (mPartiallySolvedPuzzle == null)
+            return null;
+
+        int[][] copy = new int[mPartiallySolvedPuzzle.length][];
+
+        for (int i = 0; i < mPartiallySolvedPuzzle.length; i++) {
+            copy[i] = Arrays.copyOf(mPartiallySolvedPuzzle[i],
+                    mPartiallySolvedPuzzle[i].length);
+        }
+        return copy;
+    }
+
+    // Testing only
+    int[][] getPartiallySolvedPuzzle() {
         return mPartiallySolvedPuzzle;
     }
 
-    public int[][] getOriginalPuzzle() { return mPuzzle;}
+
 
     /**
-     *
+     * Testing only
      * @param type one of {@link #GRID}, {@link #ROW}, {@link #COLUMN}
      * @return The iterator that corresponds to type
      */
@@ -517,7 +526,7 @@ class SudokuPuzzleSolver {
                         columnIterator;
     }
 
-    public float getDigit(int value) {
+    float getDigit(int value) {
         return (float) (Math.log(value) / Math.log(2)) + 1;
     }
 
