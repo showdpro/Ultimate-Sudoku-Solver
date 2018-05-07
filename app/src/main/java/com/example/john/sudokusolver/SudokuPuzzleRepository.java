@@ -25,6 +25,10 @@ public class SudokuPuzzleRepository {
             {9, 8, 0, 6, 0, 0, 0, 0, 7}
     };
 
+    public static int[][] emptyPuzzle() {
+        return new int[SudokuPuzzleSolver.MAX_LENGTH][SudokuPuzzleSolver.MAX_LENGTH];
+    }
+
     private int[][] currentPuzzle;
     /**
      * The puzzle that will appear in the view;
@@ -65,6 +69,10 @@ public class SudokuPuzzleRepository {
         return sudokuPuzzleSolution;
     }
 
+    /**
+     *
+     * @param sudokuPuzzleSolution Sets the puzzle solution without copy
+     */
     public void setSudokuPuzzleSolution(SudokuPuzzleSolution sudokuPuzzleSolution) {
         this.sudokuPuzzleSolution = sudokuPuzzleSolution;
     }
@@ -76,7 +84,16 @@ public class SudokuPuzzleRepository {
         return visiblePuzzle;
     }
 
-    public void setVisiblePuzzle(int[][] visiblePuzzle) {
-        this.visiblePuzzle = visiblePuzzle;
+    /**
+     *
+     * @param puzzle Sets the visible puzzle via copy
+     */
+    public void setVisiblePuzzle(int[][] puzzle) {
+        visiblePuzzle = new int[SudokuPuzzleSolver.MAX_LENGTH][SudokuPuzzleSolver.MAX_LENGTH];
+
+        for (int i = 0; i < puzzle.length; i++) {
+            visiblePuzzle[i] = Arrays.copyOf(puzzle[i],
+                    puzzle[i].length);
+        }
     }
 }

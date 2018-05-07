@@ -11,9 +11,7 @@ import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.GridLayout
@@ -30,7 +28,7 @@ class SudokuPuzzleFragment : Fragment(), PuzzleViewCallback {
 
     override fun onPause() {
         super.onPause()
-        mSudokuPuzzleViewModel.setVisiblePuzzle(capturePuzzleFromView())
+        mSudokuPuzzleViewModel.visiblePuzzle = capturePuzzleFromView()
     }
 
     @SuppressLint("NewApi")
@@ -118,7 +116,7 @@ class SudokuPuzzleFragment : Fragment(), PuzzleViewCallback {
     }
 
     override fun refreshPuzzleView() {
-        val puzzle = mSudokuPuzzleViewModel.getVisiblePuzzle()
+        val puzzle = mSudokuPuzzleViewModel.visiblePuzzle
 
         applyToLargeDigits(
                 {editText, row, column ->
