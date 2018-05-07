@@ -13,9 +13,6 @@ import android.support.annotation.RequiresApi
 import android.util.AttributeSet
 import android.widget.GridLayout
 
-private const val THICK_STROKE_WIDTH  = 4.0f
-private const val NORMAL_STROKE_WIDTH = 2.0f
-
 class SudokuGridLayout: GridLayout {
     private val foreGroundPaint: Paint = Paint()
 
@@ -105,5 +102,8 @@ class SudokuGridLayout: GridLayout {
         canvas.drawLine(0f, contentHeight - strokeOffset, contentWidth, contentHeight - strokeOffset, foreGroundPaint)
     }
 
-
+    companion object {
+        private const val THICK_STROKE_WIDTH  = 4.0f
+        private const val NORMAL_STROKE_WIDTH = 2.0f
+    }
 }

@@ -25,7 +25,7 @@
 
     </android.support.constraint.ConstraintLayout>
 
-    <android.support.design.widget.FloatingActionButton
+    <com.example.john.sudokusolver.MovableFloatingActionButton
         android:id="@+id/my_fab"
         android:layout_width="75dp"
         android:layout_height="75dp"

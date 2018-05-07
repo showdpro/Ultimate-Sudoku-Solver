@@ -18,9 +18,6 @@ import kotlinx.android.synthetic.main.activity_main.*
  * Main entry point for the app
  */
 
-const val STATE_SOLVER  = 0
-const val STATE_CREATOR = 1
-
 class MainActivity : AppCompatActivity() {
     private var mPuzzleViewCallback: PuzzleViewCallback? = null
     private lateinit var mPuzzleModel: SudokuPuzzleViewModel
@@ -104,5 +101,10 @@ class MainActivity : AppCompatActivity() {
             else ->
                 super.onOptionsItemSelected(item)
         }
+    }
+
+    companion object {
+        private const val STATE_SOLVER  = 0
+        private const val STATE_CREATOR = 1
     }
 }

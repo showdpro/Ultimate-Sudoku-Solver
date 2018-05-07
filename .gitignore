@@ -8,3 +8,5 @@
 /captures
 .externalNativeBuild
 .idea/caches
+.idea/assetWizardSettings.xml
+/app/src/main/*.png
