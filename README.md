@@ -1,6 +1,38 @@
 # Ultimate-Sudoku-Solver
 ### Sudoku Puzzle Game and Solver
 
+New to Sudoku. Find out!
+
+https://en.wikipedia.org/wiki/Sudoku\
+https://www.youtube.com/watch?v=XI6_VhPFjCQ
+
+## Game
+New puzzle
+
+![New Puzzle](images/s_Screenshot_startPuzzle.png)
+
+### Solve and Confirm Solution
+Click on the _star_ button
+
+![Solved Puzzle](images/s_Screenshot_startPuzzleSolved.png)
+
+### Made a mistake?
+
+Click on the _star_ button
+
+![Failed Puzzle](images/s_Screenshot_BadPuzzleFail.png)
+
+### Start over
+Click from the action bar 'Reset Puzzle'
+
+### Make a new Puzzle
+Fork this Repo to include your own generator
+- Click 'New Puzzle'
+- Click on the _check mark_ button when finsihed setting up
+- Play or solve, as usual
+
+![Create New Puzzle](images/s_Screenshot_EnterDigits.png)
+
 ## Solver
 Solves Sudoku Puzzles using a search to make all possible deductions. When the state becomes such that no more logical deductions are possible, the solver is finished.
 The solver is stable; it "solves" puzzles in the following states:
