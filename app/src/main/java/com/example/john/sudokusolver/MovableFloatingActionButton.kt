@@ -16,6 +16,7 @@ class MovableFloatingActionButton : FloatingActionButton, View.OnTouchListener {
     private var downRawY: Float = 0.toFloat()
     private var dX: Float = 0.toFloat()
     private var dY: Float = 0.toFloat()
+    private var dragThreshold2 = 0F
 
     constructor(context: Context) : super(context)
 
@@ -25,6 +26,8 @@ class MovableFloatingActionButton : FloatingActionButton, View.OnTouchListener {
 
     init {
         setOnTouchListener(this)
+        dragThreshold2 = CLICK_DRAG_TOLERANCE * resources.displayMetrics.density
+        dragThreshold2 *= dragThreshold2
     }
 
     override fun onTouch(view: View, motionEvent: MotionEvent): Boolean {
@@ -75,7 +78,7 @@ class MovableFloatingActionButton : FloatingActionButton, View.OnTouchListener {
                 val upDX = upRawX - downRawX
                 val upDY = upRawY - downRawY
 
-                return if (Math.abs(upDX) < CLICK_DRAG_TOLERANCE && Math.abs(upDY) < CLICK_DRAG_TOLERANCE) { // A click
+                return if (upDX * upDX + upDY * upDY < dragThreshold2) { // A click
                     performClick()
                 } else { // A drag
                     true // Consumed
@@ -89,6 +92,7 @@ class MovableFloatingActionButton : FloatingActionButton, View.OnTouchListener {
 
     companion object {
 
-        private const val CLICK_DRAG_TOLERANCE = 10f // Often, there will be a slight, unintentional, drag when the user taps the FAB, so we need to account for this.
+        // Units in dp
+        private const val CLICK_DRAG_TOLERANCE = 20f // Often, there will be a slight, unintentional, drag when the user taps the FAB, so we need to account for this.
     }
 }
