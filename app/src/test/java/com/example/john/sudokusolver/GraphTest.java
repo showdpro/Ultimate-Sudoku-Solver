@@ -51,14 +51,14 @@ public class GraphTest {
         // Increment digit pairs based on a complete graph made from digits. Every digit present
         // in digits pairs with every other digit present in digits. Consider pairing drawing an edge
         // and digits are the nodes
-        private void updateNodes(boolean[] digits) {
-            int length = digits.length;
+        private void updateNodes(boolean[] cellDigits) {
+            int length = cellDigits.length;
             for (int i = 0; i < length; i++) {
-                if (digits[i]) {
-                    mDigitPairings[i][i] = 1;
+                if (cellDigits[i]) {
+                    mDigitPairings[i][i]++;
 
                     for (int j = i + 1; j < length; j++) {
-                        if (digits[j]) {
+                        if (cellDigits[j]) {
                             mDigitPairings[i][j]++;
                         }
                     }
@@ -85,7 +85,7 @@ public class GraphTest {
 
             // For each digit in the pool of digits for all of the cells...
             for (int i = 0; i < MAX_LENGTH; i++) {
-                if (digitPairings[i][i] == 1) {
+                if (digitPairings[i][i] > 0) {
                     disconnectedNode = true;
 
                     // For all of the connected digits for the digit corresponding to i...
@@ -243,6 +243,23 @@ public class GraphTest {
             System.out.println();
 
             List<Integer> reconstructedCellDigits = partitionGraph.reconstructCellDigits();
+
+            for (Integer digits : reconstructedCellDigits) {
+                System.out.println(String.format("0b%9s", Integer.toString(digits, 2)).
+                        replace(' ', '0'));
+            }
+
+            cellDigits = reconstructedCellDigits;
+            partitionGraph.resetNodes();
+            partitionGraph.addCellDigits(cellDigits);
+            System.out.println();
+            System.out.println(partitionGraph.printDigitPairings());
+
+            System.out.println();
+            System.out.println("Reconstructed cell digit combinations as follows:");
+            System.out.println();
+
+            reconstructedCellDigits = partitionGraph.reconstructCellDigits();
 
             for (Integer digits : reconstructedCellDigits) {
                 System.out.println(String.format("0b%9s", Integer.toString(digits, 2)).
