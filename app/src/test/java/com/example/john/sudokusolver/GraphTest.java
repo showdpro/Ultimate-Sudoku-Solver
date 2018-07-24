@@ -138,6 +138,75 @@ public class GraphTest {
             return cellDigits;
         }
 
+        /**
+         *
+         * @return A list of cell digits reconstructed by using the digit pairings graph
+         */
+        public List<Integer> reconstructCellDigits2() {
+            // A view of digitGroupings, indexed by digit
+            List<List<Integer>>[] indexedDigitGroupings = new ArrayList[MAX_LENGTH];
+            // The outermost list is by digit grouping; the innermost list
+            // is the digit group obtained by paired digits.
+            // When the algorithm finishes, the innermost list will be flattened to an integer,
+            // with the bits signifying the digits
+            List<List<Integer>> digitGroupings = new ArrayList<>();
+
+            List<Integer> cellDigits = new ArrayList<>();
+            int[][] digitPairings = copyDigitPairings();
+            int[] connectedDigits = new int[MAX_LENGTH];
+            int connectedDigitsSize;
+            int digits;
+            boolean[] connectedNodes = new boolean[MAX_LENGTH];
+            boolean passesCompleteTest;
+
+            // Initialize digit groupings
+            {
+                List<List<Integer>> list;
+                List<Integer> digitz;
+
+                for (int i = 0; i < MAX_LENGTH; i++) {
+                    indexedDigitGroupings[i] = list = new ArrayList<>();
+
+                    for (int j = 0; j < digitPairings[i][i]; j++) {
+                        list.add(digitz = new ArrayList<>(2));
+                        digitGroupings.add(digitz);
+                        digitz.add(i);
+                    }
+                }
+            }
+
+//            for (int i = 0; i < MAX_LENGTH; i++) {
+//                connectedNodes[i] = false;
+//            }
+
+            mergeDigits(indexedDigitGroupings, 5, 6, 0, 0);
+
+            return cellDigits;
+        }
+
+        /**
+         * Precondition:
+         * indexDigitGroupings[digitA].get(indexA) must be disjoint from
+         * indexDigitGroupings[digitB].get(indexB)
+         */
+        private void mergeDigits(List<List<Integer>>[] indexedDigitGroupings,
+                                 int digitA,
+                                 int digitB,
+                                 int indexA,
+                                 int indexB) {
+
+            List<Integer> digitsA, digitsB;
+
+            digitsA = indexedDigitGroupings[digitA].get(indexA);
+            digitsB = indexedDigitGroupings[digitB].get(indexB);
+
+            digitsA.addAll(digitsB);
+
+            // We clear contents of digitsB so it is updated for all outside references
+            digitsB.clear();
+            indexedDigitGroupings[digitB].set(indexB, digitsA);
+        }
+
         private int[][] copyDigitPairings() {
             int[][] cpy = new int[MAX_LENGTH][];
 
@@ -196,33 +265,6 @@ public class GraphTest {
             }
         }
 
-
-        /*
-        Output:
-
-        0 0 0 0 0 0 0 0 0
-          1 0 2 0 2 2 2 1
-            1 0 0 2 2 0 0
-              1 0 0 0 2 1
-                0 0 0 0 0
-                  1 4 0 0
-                    1 0 0
-                      1 2
-                        1
-
-
-        Reconstructed cell digit combinations as follows:
-
-        0b110001010
-        0b010001010
-        0b001100010
-        0b001100010
-        0b001100100
-        0b001100100
-        0b110000000
-
-         */
-
         {
             PartitionGraph partitionGraph = new PartitionGraph();
             partitionGraph.resetNodes();
@@ -266,30 +308,83 @@ public class GraphTest {
                         replace(' ', '0'));
             }
         }
+    }
 
-        /*
-        Output:
+    /*
 
-        0 0 0 0 0 0 0 0 0
-          0 0 0 0 0 0 0 0
-            1 1 0 0 2 0 1
-              1 0 0 2 0 1
-                0 0 0 0 0
-                  1 2 0 1
-                    1 0 3
-                      0 0
-                        1
+0 0 0 0 0 0 0 0 0
+  4 0 2 0 2 2 2 1
+    2 0 0 2 2 0 0
+      2 0 0 0 2 1
+        0 0 0 0 0
+          4 4 0 0
+            4 0 0
+              3 2
+                2
 
 
-        Reconstructed cell digit combinations as follows:
+Reconstructed cell digit combinations as follows:
 
-        0b101001100
-        0b001000100
-        0b001001000
-        0b101100000
-        0b001100000
-        0b101000000
+0b110001010
+0b010001010
+0b001100010
+0b001100010
+0b001100100
+0b001100100
+0b110000000
 
-         */
+0 0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+    2 1 0 0 2 0 1
+      2 0 0 2 0 1
+        0 0 0 0 0
+          2 2 0 1
+            5 0 3
+              0 0
+                3
+
+
+Reconstructed cell digit combinations as follows:
+
+0b101001100
+0b001000100
+0b001001000
+0b101100000
+0b001100000
+0b101000000
+
+0 0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+    2 1 0 0 2 0 1
+      2 0 0 2 0 1
+        0 0 0 0 0
+          2 2 0 1
+            6 0 3
+              0 0
+                3
+
+
+Reconstructed cell digit combinations as follows:
+
+0b101001100
+0b001000100
+0b001001000
+0b101100000
+0b001100000
+0b101000000
+     */
+
+    @Test
+    public void testPartitionGraphReconstruct2() {
+        PartitionGraph partitionGraph = new PartitionGraph();
+        List<Integer> cellDigits = Arrays.asList(
+                0b001001100,
+                0b101000100,
+                0b101001000,
+                0b101100000,
+                0b001100000
+        );
+        partitionGraph.addCellDigits(cellDigits);
+        List<Integer> reconstruct = partitionGraph.reconstructCellDigits2();
     }
 }
