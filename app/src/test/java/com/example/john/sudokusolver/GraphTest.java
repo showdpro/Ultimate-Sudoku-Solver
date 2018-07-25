@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import static com.example.john.sudokusolver.SudokuPuzzleSolver.VALUE;
@@ -302,6 +304,38 @@ public class GraphTest {
             }
             return builder.toString();
         }
+
+        public static class DigitGroupingComparator implements Comparator<Integer> {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                if (o1 == null) {
+                    if (o2 == null)
+                        return 0;
+                    else
+                        return -1;
+                } else if (o2 == null)
+                    return 1;
+                else {
+                    int a = o1;
+                    int b = o2;
+
+                    // Sort lexicographically with strings formed starting with the least bits
+                    while (a > 0) {
+                        switch (a % 2 - b % 2) {
+                            case -1:
+                                return -1;
+                            case 1:
+                                return 1;
+                            default:
+                                a = a >> 1;
+                                b = b >> 1;
+                        }
+                    }
+                    // b has higher order bits than a, or else they both have the same bits
+                    return b > 0 ? -1 : 0;
+                }
+            }
+        }
     }
 
     @Test
@@ -478,6 +512,17 @@ Reconstructed cell digit combinations as follows:
                 0b001011001
         );
 
+        System.out.println("Original digit groupings");
+        System.out.println();
+
+        PartitionGraph.DigitGroupingComparator digitComparator = new PartitionGraph.DigitGroupingComparator();
+        Collections.sort(cellDigits, digitComparator);
+        for (Integer digits :
+                cellDigits) {
+            System.out.println(String.format("0b%9s", Integer.toString(digits, 2)).
+                    replace(' ', '0'));
+        }
+
         partitionGraph.addCellDigits(cellDigits);
 
         System.out.println();
@@ -488,6 +533,7 @@ Reconstructed cell digit combinations as follows:
         System.out.println();
 
         List<Integer> reconstructedCellDigits = partitionGraph.reconstructCellDigits3();
+        Collections.sort(reconstructedCellDigits, digitComparator);
 
         for (Integer digits : reconstructedCellDigits) {
             System.out.println(String.format("0b%9s", Integer.toString(digits, 2)).
@@ -533,6 +579,17 @@ Reconstructed cell digit combinations as follows:
     */
 
     /*
+
+    Original digit groupings
+
+    0b010110000
+    0b110011000
+    0b001110001
+    0b100001001
+    0b101001001
+    0b001011001
+    0b001011001
+
     5 0 0 4 3 1 4 0 2
       0 0 0 0 0 0 0 0
         0 0 0 0 0 0 0
@@ -546,11 +603,11 @@ Reconstructed cell digit combinations as follows:
 
     Reconstructed cell digit combinations as follows:
 
-    0b000001001
-    0b000001001
-    0b000001001
-    0b000001001
     0b000011000
+    0b000001001
+    0b000001001
+    0b000001001
+    0b000001001
 
     Partially consumed digit pairing matrix:
 
