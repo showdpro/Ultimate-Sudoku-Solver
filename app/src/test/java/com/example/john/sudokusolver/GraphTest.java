@@ -233,12 +233,12 @@ public class GraphTest {
                             degreePossibleIntersection = 0;
 
                             for (int k = i - 1; k > -1; k--) {
-                                // Ok to read from the original pairings
+                                // Ok to read from the original, unmodified pairings
                                 if (mDigitPairings[k][j] > 0)
                                     degreePossibleIntersection += mPostDigitPairings[k][i];
                             }
 
-                            degree = minimum(mPostDigitPairings[i][j] - degreePossibleIntersection, mPostDigitPairings[j][j]);
+                            degree = minimum(mPostDigitPairings[i][j] - degreePossibleIntersection, mPostDigitPairings[j][j], mPostDigitPairings[i][i]);
 
                             if (degree > degreeMax) {
                                 degreeMax = degree;
@@ -263,6 +263,10 @@ public class GraphTest {
 
         private int minimum(int a, int b) {
             return a < b ? a : b;
+        }
+
+        private int minimum(int a, int b, int c) {
+            return a < b ? (a < c ? a : c) : (b < c ? b : c);
         }
 
         private int[][] copyDigitPairings() {
@@ -458,11 +462,20 @@ Reconstructed cell digit combinations as follows:
     public void testPartitionGraphReconstruct3() {
         PartitionGraph partitionGraph = new PartitionGraph();
         List<Integer> cellDigits = Arrays.asList(
+                /*
                 0b001001100,
                 0b101000100,
                 0b101001000,
                 0b101100000,
                 0b001100000
+                */
+                0b001110001,
+                0b001011001,
+                0b010110000,
+                0b110011000,
+                0b100001001,
+                0b101001001,
+                0b001011001
         );
 
         partitionGraph.addCellDigits(cellDigits);
@@ -482,7 +495,73 @@ Reconstructed cell digit combinations as follows:
         }
 
         System.out.println();
-        System.out.println("Partially consumed digit pairing matrix:");
+        System.out.println("Partially consumed digit pairing matrix:\n");
         System.out.println(partitionGraph.printPostDigitPairings());
     }
+
+    /*
+            0 0 0 0 0 0 0 0 0
+              0 0 0 0 0 0 0 0
+                2 1 0 0 2 0 1
+                  2 0 0 2 0 1
+                    0 0 0 0 0
+                      2 2 0 1
+                        5 0 3
+                          0 0
+                            3
+
+
+            Reconstructed cell digit combinations as follows:
+
+            0b001000100
+            0b001000100
+            0b001001000
+            0b001100000
+            0b001100000
+
+            Partially consumed digit pairing matrix:
+
+            0 0 0 0 0 0 0 0 0
+              0 0 0 0 0 0 0 0
+                0 1 0 0 0 0 1
+                  1 0 0 1 0 1
+                    0 0 0 0 0
+                      0 0 0 1
+                        0 0 3
+                          0 0
+                            3
+    */
+
+    /*
+    5 0 0 4 3 1 4 0 2
+      0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0
+          5 3 0 3 1 3
+            5 2 3 2 1
+              2 1 1 0
+                4 0 1
+                  2 1
+                    3
+
+
+    Reconstructed cell digit combinations as follows:
+
+    0b000001001
+    0b000001001
+    0b000001001
+    0b000001001
+    0b000011000
+
+    Partially consumed digit pairing matrix:
+
+    1 0 0 0 3 1 4 0 2
+      0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0
+          0 2 0 3 1 3
+            4 2 3 2 1
+              2 1 1 0
+                4 0 1
+                  2 1
+                    3
+     */
 }
