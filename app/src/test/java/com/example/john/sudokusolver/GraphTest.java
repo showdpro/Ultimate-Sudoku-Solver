@@ -16,6 +16,7 @@ import static com.example.john.sudokusolver.SudokuPuzzleSolver.MAX_LENGTH;
 public class GraphTest {
     static class PartitionGraph {
         private int[][] mDigitPairings = new int[MAX_LENGTH][MAX_LENGTH];
+        private int[][] mPostDigitPairings;
 
         {
             resetNodes();
@@ -207,6 +208,63 @@ public class GraphTest {
             indexedDigitGroupings[digitB].set(indexB, digitsA);
         }
 
+        /**
+         *
+         * @return A list of cell digits reconstructed by using the digit pairings graph
+         */
+        public List<Integer> reconstructCellDigits3() {
+            List<Integer> cellDigits = new ArrayList<>();
+            mPostDigitPairings = copyDigitPairings();
+
+            {
+                int degree, degreeMax, degreePossibleIntersection, digit, digitValues;
+                digit = 0;
+
+                // For each row of the partition graph/matrix...
+                for (int i = 0; i < MAX_LENGTH; i++) {
+                    if (mPostDigitPairings[i][i] > 0) {
+                        degreeMax = 0;
+
+                        // Find the connecting digit of highest degree
+                        for (int j = i + 1; j < MAX_LENGTH; j++) {
+                            if (mPostDigitPairings[i][j] == 0)
+                                continue;
+
+                            degreePossibleIntersection = 0;
+
+                            for (int k = i - 1; k > -1; k--) {
+                                // Ok to read from the original pairings
+                                if (mDigitPairings[k][j] > 0)
+                                    degreePossibleIntersection += mPostDigitPairings[k][i];
+                            }
+
+                            degree = minimum(mPostDigitPairings[i][j] - degreePossibleIntersection, mPostDigitPairings[j][j]);
+
+                            if (degree > degreeMax) {
+                                degreeMax = degree;
+                                digit = j;
+                            }
+                        }
+                        if (degreeMax > 0) {
+                            mPostDigitPairings[i][i] -= degreeMax;
+                            mPostDigitPairings[digit][digit] -= degreeMax;
+                            mPostDigitPairings[i][digit] -= degreeMax;
+
+                            // Update the solution
+                            digitValues = VALUE[i + 1] | VALUE[digit + 1];
+                            for (int j = 0; j < degreeMax; j++)
+                                cellDigits.add(digitValues);
+                        }
+                    }
+                }
+            }
+            return cellDigits;
+        }
+
+        private int minimum(int a, int b) {
+            return a < b ? a : b;
+        }
+
         private int[][] copyDigitPairings() {
             int[][] cpy = new int[MAX_LENGTH][];
 
@@ -217,6 +275,14 @@ public class GraphTest {
         }
 
         public String printDigitPairings() {
+            return __printDigitPairings(mDigitPairings);
+        }
+
+        String printPostDigitPairings() {
+            return __printDigitPairings(mPostDigitPairings);
+        }
+
+        private String __printDigitPairings(int[][] digitPairings) {
             StringBuilder builder = new StringBuilder();
 
             for (int i = 0; i < MAX_LENGTH; i++) {
@@ -224,7 +290,7 @@ public class GraphTest {
                     if (i > j) {
                         builder.append("  ");
                     } else {
-                        builder.append(mDigitPairings[i][j]);
+                        builder.append(digitPairings[i][j]);
                         builder.append(' ');
                     }
                 }
@@ -386,5 +452,37 @@ Reconstructed cell digit combinations as follows:
         );
         partitionGraph.addCellDigits(cellDigits);
         List<Integer> reconstruct = partitionGraph.reconstructCellDigits2();
+    }
+
+    @Test
+    public void testPartitionGraphReconstruct3() {
+        PartitionGraph partitionGraph = new PartitionGraph();
+        List<Integer> cellDigits = Arrays.asList(
+                0b001001100,
+                0b101000100,
+                0b101001000,
+                0b101100000,
+                0b001100000
+        );
+
+        partitionGraph.addCellDigits(cellDigits);
+
+        System.out.println();
+        System.out.println(partitionGraph.printDigitPairings());
+
+        System.out.println();
+        System.out.println("Reconstructed cell digit combinations as follows:");
+        System.out.println();
+
+        List<Integer> reconstructedCellDigits = partitionGraph.reconstructCellDigits3();
+
+        for (Integer digits : reconstructedCellDigits) {
+            System.out.println(String.format("0b%9s", Integer.toString(digits, 2)).
+                    replace(' ', '0'));
+        }
+
+        System.out.println();
+        System.out.println("Partially consumed digit pairing matrix:");
+        System.out.println(partitionGraph.printPostDigitPairings());
     }
 }
