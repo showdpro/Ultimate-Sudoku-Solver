@@ -51,6 +51,34 @@ public class GraphTest {
             }
         }
 
+        /**
+         * @param cellDigits Each element in cellDigits is a digit grouping notated as "1357",
+         *                   where 1,3,5,7 are digits of a single digit group
+         */
+        public void addCellDigitsCondensed(List<String> cellDigits) {
+            boolean[] digitsArray = new boolean[MAX_LENGTH];
+
+            for (String digits :
+                    cellDigits) {
+
+                for (int i = 0; i < MAX_LENGTH; i++) {
+                    digitsArray[i] = false;
+                }
+                int length = digits.length();
+                int one = '1';
+
+                // Parse the cell's digits
+                for (int i = 0; i < length; i++) {
+                    try {
+                        digitsArray[digits.charAt(i) - one] = true;
+                    } catch (IndexOutOfBoundsException ignore) {}
+                }
+
+                // Update nodes, passing a sparse array indicating the digits for the digit group
+                updateNodes(digitsArray);
+            }
+        }
+
         // Increment digit pairs based on a complete graph made from digits. Every digit present
         // in digits pairs with every other digit present in digits. Consider pairing drawing an edge
         // and digits are the nodes
@@ -261,6 +289,152 @@ public class GraphTest {
                 }
             }
             return cellDigits;
+        }
+
+        /**
+         *
+         * @return A list of cell digits reconstructed by using the digit pairings graph
+         */
+        public List<String> reconstructCellDigits4() {
+            List<Integer> digitGroupings = new ArrayList<>();
+            mPostDigitPairings = copyDigitPairings();
+
+            __4_First_Step(digitGroupings);
+            return __adaptToCondensedDigits(digitGroupings);
+        }
+
+        private void __4_First_Step(List<Integer> digitGroupings) {
+            // Find the row that will yield the biggest result
+            int metric, numberConnections, bestMetric = -99;
+            int index = -1;
+
+            for (int i = 0; i < MAX_LENGTH; i++) {
+                // Compute the metric for each row
+                metric = numberConnections = 0;
+
+                if (mPostDigitPairings[i][i] == 0)
+                    continue;
+
+                for (int j = 0; j < MAX_LENGTH; j++) {
+                    if (mPostDigitPairings[i][j] > 0) {
+                        metric += mPostDigitPairings[i][j];
+                        numberConnections++;
+                    }
+                }
+                // Norm the number of connections from digit i relative to the number of
+                // occurrences of i, once per each distinct connection, ex 14 and 13 are distinct
+                // 14 and 14 are not
+                metric -= numberConnections * mPostDigitPairings[i][i];
+
+                if (metric > bestMetric) {
+                    bestMetric = metric;
+                    index = i;
+                }
+            }
+            if (index < 0)
+                return;
+
+            index = 0;
+
+            // Now construct the first digit groupings from the row in digit pairings that
+            // will yield the best result
+
+            // Consume each digit that is connected, so that all of its connections are set
+            // at one time
+            boolean[] connectionConsumed = new boolean[MAX_LENGTH];
+            int previousSubsetLength, subsetLength, setLength, connectionIndex, digits;
+
+            setLength = mPostDigitPairings[index][index];
+            previousSubsetLength = -1;
+
+            do {
+                subsetLength = 0;
+                connectionIndex = -1;
+
+                // Read from the digit pairings to determine the best digits to connect
+                for (int i = index + 1; i < MAX_LENGTH; i++) {
+                    if (mPostDigitPairings[index][i] > subsetLength &&
+                            !connectionConsumed[i]) {
+
+                        subsetLength = mPostDigitPairings[index][i];
+                        connectionIndex = i;
+                    }
+                }
+                if (digitGroupings.isEmpty()) { // No previous digit groupings
+                    if (subsetLength == 0) {
+                        // Edge case: In the best row, the digit connects to no other digits
+                        // Record this as a digit grouping consisting of a single digit
+                        digitGroupings.add(VALUE[index + 1]);
+
+                        // Update the digit pairing table
+                        mPostDigitPairings[index][index]--;
+                        break;
+                    } else {
+                        digits = VALUE[index + 1] | VALUE[connectionIndex + 1];
+
+                        for (int i = 0; i < subsetLength; i++) {
+                            digitGroupings.add(digits);
+                        }
+
+                        // Update the diagonal entry in the pairing table exactly once
+                        mPostDigitPairings[index][index] -= subsetLength;
+                    }
+                } else {
+                    // Intersect the previous subset with the current,
+                    // in order to specify more connections with digit groupings already
+                    // discovered
+                    subsetLength = previousSubsetLength + subsetLength - setLength;
+
+                    if (subsetLength > 0) {
+                        digits = digitGroupings.get(0) | VALUE[connectionIndex + 1];
+
+                        // The digit groupings of the subset by intersection are homogeneous
+                        // with respect to their digits
+                        for (int i = 0; i < subsetLength; i++) {
+                            digitGroupings.set(i, digits);
+                        }
+                    } else {
+                        break;
+                    }
+                }
+
+                // Update the digit pairing table
+                mPostDigitPairings[index][connectionIndex] -= subsetLength;
+                mPostDigitPairings[connectionIndex][connectionIndex] -= subsetLength;
+
+                // Update the digit pairing table with all of the previously consumed connections
+                for (int i = 0; i < MAX_LENGTH; i++) {
+                    if (!connectionConsumed[i])
+                        continue;
+                    if (i < connectionIndex)
+                        mPostDigitPairings[i][connectionIndex] -= subsetLength;
+                    else
+                        mPostDigitPairings[connectionIndex][i] -= subsetLength;
+                }
+
+                // Updates
+                connectionConsumed[connectionIndex] = true;
+                previousSubsetLength = subsetLength;
+            } while (true);
+        }
+
+        private List<String> __adaptToCondensedDigits(List<Integer> digitGroupings) {
+            List<String> newDigitGroupings = new ArrayList<>(digitGroupings.size());
+            StringBuilder builder = new StringBuilder(MAX_LENGTH);
+
+            for (Integer digits :
+                    digitGroupings) {
+
+                builder.setLength(0);
+
+                // Parse the cell's digits
+                for (int i = 0; i < MAX_LENGTH; i++) {
+                    if ((VALUE[i + 1] & digits) != 0)
+                        builder.append(i + 1);
+                }
+                newDigitGroupings.add(builder.toString());
+            }
+            return newDigitGroupings;
         }
 
         private int minimum(int a, int b) {
@@ -515,7 +689,7 @@ Reconstructed cell digit combinations as follows:
         System.out.println("Original digit groupings");
         System.out.println();
 
-        PartitionGraph.DigitGroupingComparator digitComparator = new PartitionGraph.DigitGroupingComparator();
+        Comparator<Integer> digitComparator = new PartitionGraph.DigitGroupingComparator().reversed();
         Collections.sort(cellDigits, digitComparator);
         for (Integer digits :
                 cellDigits) {
@@ -620,5 +794,81 @@ Reconstructed cell digit combinations as follows:
                 4 0 1
                   2 1
                     3
+     */
+
+    @Test
+    public void testPartitionGraphReconstruct4() {
+        PartitionGraph partitionGraph = new PartitionGraph();
+        List<String> cellDigits = Arrays.asList(
+                "123",
+                "1234",
+                "12",
+                "1"
+        );
+
+        System.out.println("Original digit groupings");
+        System.out.println();
+
+        Collections.sort(cellDigits);
+        for (String digits :
+                cellDigits) {
+            System.out.println(digits);
+        }
+
+        partitionGraph.addCellDigitsCondensed(cellDigits);
+
+        System.out.println();
+        System.out.println(partitionGraph.printDigitPairings());
+
+        System.out.println();
+        System.out.println("Reconstructed cell digit combinations as follows:");
+        System.out.println();
+
+        List<String> reconstructedCellDigits = partitionGraph.reconstructCellDigits4();
+        Collections.sort(reconstructedCellDigits);
+
+        for (String digits : reconstructedCellDigits) {
+            System.out.println(digits);
+        }
+
+        System.out.println();
+        System.out.println("Partially consumed digit pairing matrix:\n");
+        System.out.println(partitionGraph.printPostDigitPairings());
+    }
+
+    /*
+    1
+    12
+    123
+    1234
+
+    4 3 2 1 0 0 0 0 0
+      3 2 1 0 0 0 0 0
+        2 1 0 0 0 0 0
+          1 0 0 0 0 0
+            0 0 0 0 0
+              0 0 0 0
+                0 0 0
+                  0 0
+                    0
+
+
+    Reconstructed cell digit combinations as follows:
+
+    12
+    12
+    123
+
+    Partially consumed digit pairing matrix:
+
+    1 0 1 1 0 0 0 0 0
+      0 1 1 0 0 0 0 0
+        1 1 0 0 0 0 0
+          1 0 0 0 0 0
+            0 0 0 0 0
+              0 0 0 0
+                0 0 0
+                  0 0
+                    0
      */
 }
