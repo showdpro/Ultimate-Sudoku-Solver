@@ -184,11 +184,6 @@ public class GraphTest {
 
             List<Integer> cellDigits = new ArrayList<>();
             int[][] digitPairings = copyDigitPairings();
-            int[] connectedDigits = new int[MAX_LENGTH];
-            int connectedDigitsSize;
-            int digits;
-            boolean[] connectedNodes = new boolean[MAX_LENGTH];
-            boolean passesCompleteTest;
 
             // Initialize digit groupings
             {
@@ -205,10 +200,6 @@ public class GraphTest {
                     }
                 }
             }
-
-//            for (int i = 0; i < MAX_LENGTH; i++) {
-//                connectedNodes[i] = false;
-//            }
 
             mergeDigits(indexedDigitGroupings, 5, 6, 0, 0);
 
@@ -262,6 +253,7 @@ public class GraphTest {
 
                             degreePossibleIntersection = 0;
 
+                            // FIXME this step is unjustified, not generally true
                             for (int k = i - 1; k > -1; k--) {
                                 // Ok to read from the original, unmodified pairings
                                 if (mDigitPairings[k][j] > 0)
@@ -305,27 +297,21 @@ public class GraphTest {
 
         private void __4_First_Step(List<Integer> digitGroupings) {
             // Find the row that will yield the biggest result
-            int metric, numberConnections, bestMetric = -99;
+            int metric, halfCount, bestMetric = -1;
             int index = -1;
 
             for (int i = 0; i < MAX_LENGTH; i++) {
                 // Compute the metric for each row
-                metric = numberConnections = 0;
+                metric = 0;
+                halfCount = mPostDigitPairings[i][i] / 2;
 
                 if (mPostDigitPairings[i][i] == 0)
                     continue;
 
-                for (int j = 0; j < MAX_LENGTH; j++) {
-                    if (mPostDigitPairings[i][j] > 0) {
-                        metric += mPostDigitPairings[i][j];
-                        numberConnections++;
-                    }
+                for (int j = i + 1; j < MAX_LENGTH; j++) {
+                    if (mPostDigitPairings[i][j] > halfCount)
+                        metric++;
                 }
-                // Norm the number of connections from digit i relative to the number of
-                // occurrences of i, once per each distinct connection, ex 14 and 13 are distinct
-                // 14 and 14 are not
-                metric -= numberConnections * mPostDigitPairings[i][i];
-
                 if (metric > bestMetric) {
                     bestMetric = metric;
                     index = i;
@@ -334,13 +320,11 @@ public class GraphTest {
             if (index < 0)
                 return;
 
-            index = 0;
-
             // Now construct the first digit groupings from the row in digit pairings that
             // will yield the best result
 
             // Consume each digit that is connected, so that all of its connections are set
-            // at one time
+            // at one time and exactly once
             boolean[] connectionConsumed = new boolean[MAX_LENGTH];
             int previousSubsetLength, subsetLength, setLength, connectionIndex, digits;
 
@@ -353,8 +337,7 @@ public class GraphTest {
 
                 // Read from the digit pairings to determine the best digits to connect
                 for (int i = index + 1; i < MAX_LENGTH; i++) {
-                    if (mPostDigitPairings[index][i] > subsetLength &&
-                            !connectionConsumed[i]) {
+                    if (!connectionConsumed[i] && mPostDigitPairings[index][i] > subsetLength) {
 
                         subsetLength = mPostDigitPairings[index][i];
                         connectionIndex = i;
@@ -800,10 +783,25 @@ Reconstructed cell digit combinations as follows:
     public void testPartitionGraphReconstruct4() {
         PartitionGraph partitionGraph = new PartitionGraph();
         List<String> cellDigits = Arrays.asList(
-                "123",
-                "1234",
-                "12",
-                "1"
+//                "123",
+//                "1234",
+//                "12",
+//                "1"
+
+//                "2356",
+//                "3568",
+//                "1236",
+//                "1",
+//                "156",
+//                "15"
+
+                "149",
+                "1479",
+                "1457",
+                "1457",
+                "4589",
+                "1567",
+                "568"
         );
 
         System.out.println("Original digit groupings");
@@ -870,5 +868,86 @@ Reconstructed cell digit combinations as follows:
                 0 0 0
                   0 0
                     0
+     */
+
+    /*
+    Original digit groupings
+
+    1
+    1236
+    15
+    156
+    2356
+    3568
+
+    4 1 1 0 2 2 0 0 0
+      2 2 0 1 2 0 0 0
+        3 0 2 3 0 1 0
+          0 0 0 0 0 0
+            4 3 0 1 0
+              4 0 1 0
+                0 0 0
+                  1 0
+                    0
+
+
+    Reconstructed cell digit combinations as follows:
+
+    2356
+    236
+
+    Partially consumed digit pairing matrix:
+
+    4 1 1 0 2 2 0 0 0
+      0 0 0 0 0 0 0 0
+        1 0 1 1 0 1 0
+          0 0 0 0 0 0
+            3 2 0 1 0
+              2 0 1 0
+                0 0 0
+                  1 0
+                    0
+     */
+
+    /*
+    Original digit groupings
+
+    1457
+    1457
+    1479
+    149
+    1567
+    4589
+    568
+
+    5 0 0 4 3 1 4 0 2
+      0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0
+          5 3 0 3 1 3
+            5 2 3 2 1
+              2 1 1 0
+                4 0 1
+                  2 1
+                    3
+
+
+    Reconstructed cell digit combinations as follows:
+
+    14
+    1457
+    147
+    147
+
+    Partially consumed digit pairing matrix:
+
+    1 0 0 0 2 1 1 0 2
+      0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0
+          1 2 0 0 1 3
+            4 2 2 2 1
+              2 1 1 0
+                1 0 1
+                  2 1
+                    3
      */
 }
