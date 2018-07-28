@@ -401,6 +401,68 @@ public class GraphTest {
             } while (true);
         }
 
+        List<List<String>> partitionedSubsetDriver() {
+            List<Integer> digitGroupings = new ArrayList<>();
+            mPostDigitPairings = copyDigitPairings();
+
+            __4_First_Step(digitGroupings);
+
+            // Test the subset function...
+            int includeMask = VALUE[8];
+            int excludeMask = VALUE[3];
+
+            List<Integer> subset = subset(digitGroupings, includeMask, excludeMask);
+            List<List<Integer>> partitionedSubset = partitionDigitGroupings(subset);
+
+            List<List<String>> condensedDigitGroupings = new ArrayList<>(partitionedSubset.size());
+
+            for (List<Integer> pClass : partitionedSubset)
+                condensedDigitGroupings.add(__adaptToCondensedDigits(pClass));
+
+            return condensedDigitGroupings;
+        }
+
+        private List<Integer> subset(List<Integer> digitGroupings, int includeMask, int excludeMask) {
+            List<Integer> subset = new ArrayList<>(digitGroupings.size());
+
+            if ((includeMask & excludeMask) != 0)
+                throw new RuntimeException("include mask and exclude mask must be disjoint");
+
+            for (Integer digits : digitGroupings) {
+                if ((digits & includeMask) == includeMask &&
+                        (digits & excludeMask) == 0) {
+
+                    subset.add(digits);
+                }
+            }
+            return subset;
+        }
+
+        /**
+         * Partition digit groupings based on equals relation: two digit groupings are equal
+         * if they have identical digits
+         */
+        private List<List<Integer>> partitionDigitGroupings(List<Integer> digitGroupings) {
+            List<List<Integer>> p = new ArrayList<>(digitGroupings.size());
+            List<Integer> pClass;
+            int residue, dummy;
+
+            while (!digitGroupings.isEmpty()) {
+                pClass = new ArrayList<>(1);
+                pClass.add(residue = digitGroupings.remove(0));
+                p.add(pClass);
+
+                dummy = 0;
+                while (dummy < digitGroupings.size()) {
+                    if (digitGroupings.get(dummy) == residue)
+                        pClass.add(digitGroupings.remove(0));
+                    else
+                        dummy++;
+                }
+            }
+            return p;
+        }
+
         private List<String> __adaptToCondensedDigits(List<Integer> digitGroupings) {
             List<String> newDigitGroupings = new ArrayList<>(digitGroupings.size());
             StringBuilder builder = new StringBuilder(MAX_LENGTH);
@@ -795,13 +857,20 @@ Reconstructed cell digit combinations as follows:
 //                "156",
 //                "15"
 
-                "149",
-                "1479",
-                "1457",
-                "1457",
-                "4589",
-                "1567",
-                "568"
+//                "149",
+//                "1479",
+//                "1457",
+//                "1457",
+//                "4589",
+//                "1567",
+//                "568"
+
+                "369",
+                "3",
+                "18",
+                "1348",
+                "1389",
+                "1469"
         );
 
         System.out.println("Original digit groupings");
@@ -949,5 +1018,138 @@ Reconstructed cell digit combinations as follows:
                 1 0 1
                   2 1
                     3
+     */
+
+    /*
+    Original digit groupings
+
+    1348
+    1389
+    1469
+    18
+    3
+    369
+
+    4 0 2 2 0 1 0 3 2
+      0 0 0 0 0 0 0 0
+        4 1 0 1 0 2 2
+          2 0 1 0 1 1
+            0 0 0 0 0
+              2 0 0 2
+                0 0 0
+                  3 1
+                    3
+
+
+    Reconstructed cell digit combinations as follows:
+
+    138
+    18
+    18
+
+    Partially consumed digit pairing matrix:
+
+    1 0 1 2 0 1 0 0 2
+      0 0 0 0 0 0 0 0
+        3 1 0 1 0 1 2
+          2 0 1 0 1 1
+            0 0 0 0 0
+              2 0 0 2
+                0 0 0
+                  0 1
+                    3
+     */
+
+    @Test
+    public void testPartitionGraphReconstruct_HelperMethods() {
+        PartitionGraph partitionGraph = new PartitionGraph();
+        List<String> cellDigits = Arrays.asList(
+                "369",
+                "3",
+                "18",
+                "1348",
+                "1389",
+                "1469"
+        );
+
+        System.out.println("Original digit groupings");
+        System.out.println();
+
+        Collections.sort(cellDigits);
+        for (String digits :
+                cellDigits) {
+            System.out.println(digits);
+        }
+
+        partitionGraph.addCellDigitsCondensed(cellDigits);
+        System.out.println();
+        System.out.println("Reconstructed cell digit combinations as follows:");
+        System.out.println();
+
+        List<String> reconstructedCellDigits = partitionGraph.reconstructCellDigits4();
+        Collections.sort(reconstructedCellDigits);
+
+        for (String digits : reconstructedCellDigits) {
+            System.out.println(digits);
+        }
+
+        System.out.println();
+        System.out.println("Helper Methods: Subsets");
+        System.out.println();
+
+        List<List<String>> partitionedSubsets = partitionGraph.partitionedSubsetDriver();
+
+        switch (partitionedSubsets.size()) {
+            case 0:
+                break;
+
+            case 1: {
+                    List<String> pClass = partitionedSubsets.get(0);
+
+                    Collections.sort(pClass);
+                    for (String digits :
+                            pClass) {
+                        System.out.println(digits);
+                    }
+                }
+                break;
+
+            default:
+                int count = 0;
+                for (List<String> pClass : partitionedSubsets) {
+                    System.out.println("Group # " + ++count);
+                    System.out.println();
+
+                    Collections.sort(pClass);
+                    for (String digits :
+                            pClass) {
+                        System.out.println(digits);
+                    }
+                    System.out.println();
+                    System.out.println();
+                }
+        }
+    }
+
+    /*
+    Original digit groupings
+
+    1348
+    1389
+    1469
+    18
+    3
+    369
+
+    Reconstructed cell digit combinations as follows:
+
+    138
+    18
+    18
+
+    Helper Methods: Subsets
+
+    18
+    18
      */
 }
