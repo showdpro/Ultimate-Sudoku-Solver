@@ -401,15 +401,10 @@ public class GraphTest {
             } while (true);
         }
 
-        List<List<String>> partitionedSubsetDriver() {
-            List<Integer> digitGroupings = new ArrayList<>();
-            mPostDigitPairings = copyDigitPairings();
-
-            __4_First_Step(digitGroupings);
-
-            // Test the subset function...
-            int includeMask = VALUE[8];
-            int excludeMask = VALUE[3];
+        // Test the subset function
+        // Wraps the partitionedSubset method
+        List<List<String>> partitionedSubsetDriver(List<String> cellDigits, int includeMask, int excludeMask) {
+            List<Integer> digitGroupings = __fromCondensed(cellDigits);
 
             List<Integer> subset = subset(digitGroupings, includeMask, excludeMask);
             List<List<Integer>> partitionedSubset = partitionDigitGroupings(subset);
@@ -422,6 +417,27 @@ public class GraphTest {
             return condensedDigitGroupings;
         }
 
+        /**
+         * Expose the subset method
+         */
+        List<String> subsetDriver(List<String> cellDigits, int includeMask, int excludeMask) {
+            return __adaptToCondensedDigits(
+                    subset(__fromCondensed(cellDigits),
+                    includeMask,
+                    excludeMask));
+        }
+
+        /**
+         *
+         * @param digitGroupings The digit groupings to take a subset
+         * @param includeMask The mask of digits that must all be included in each digit group
+         *                    in the subset. 0 corresponds to include none. Thus in that case
+         *                    all digit groups will be selected in the subset.
+         * @param excludeMask The mask of digits that each group must not contain any in order
+         *                    to be selected for subset. 0 corresponds to exclude none.
+         * @return A subset of the digit groups that conforms to the constraints imposed by
+         * includeMask and excludeMask
+         */
         private List<Integer> subset(List<Integer> digitGroupings, int includeMask, int excludeMask) {
             List<Integer> subset = new ArrayList<>(digitGroupings.size());
 
@@ -480,6 +496,34 @@ public class GraphTest {
                 newDigitGroupings.add(builder.toString());
             }
             return newDigitGroupings;
+        }
+
+        /**
+         * @param cellDigits Each element in cellDigits is a digit grouping notated as "1357",
+         *                   where 1,3,5,7 are digits of a single digit group
+         */
+        private List<Integer> __fromCondensed(List<String> cellDigits) {
+            List<Integer> outDigits = new ArrayList<>(cellDigits.size());
+            int iDigits;
+            int length;
+            int one;
+
+            for (String digits :
+                    cellDigits) {
+
+                length = digits.length();
+                one = '1';
+                iDigits = 0;
+
+                // Parse the cell's digits
+                for (int i = 0; i < length; i++) {
+                    try {
+                        iDigits |= VALUE[digits.charAt(i) - one + 1];
+                    } catch (IndexOutOfBoundsException ignore) {}
+                }
+                outDigits.add(iDigits);
+            }
+            return outDigits;
         }
 
         private int minimum(int a, int b) {
@@ -1097,7 +1141,25 @@ Reconstructed cell digit combinations as follows:
         System.out.println("Helper Methods: Subsets");
         System.out.println();
 
-        List<List<String>> partitionedSubsets = partitionGraph.partitionedSubsetDriver();
+        List<String> currentDigitGroups = Arrays.asList(
+                "138",
+                "1348",
+                "18",
+                "1469",
+                "369"
+        );
+
+//        int includeMask = 0;
+//        int includeMask = VALUE[6];
+        int includeMask = VALUE[1] | VALUE[8];
+
+//        int excludeMask = 0;
+//        int excludeMask = VALUE[9];
+//        int excludeMask = VALUE[6] | VALUE[8];
+        int excludeMask = VALUE[4] | VALUE[6] | VALUE[9];
+
+//        List<List<String>> partitionedSubsets = partitionGraph.partitionedSubsetDriver(reconstructedCellDigits);
+        List<List<String>> partitionedSubsets = partitionGraph.partitionedSubsetDriver(currentDigitGroups, includeMask, excludeMask);
 
         switch (partitionedSubsets.size()) {
             case 0:
@@ -1152,4 +1214,59 @@ Reconstructed cell digit combinations as follows:
     18
     18
      */
+
+    @Test
+    public void testPartitionGraphReconstruct_SubsetMethods() {
+        PartitionGraph partitionGraph = new PartitionGraph();
+        List<String> cellDigits = Arrays.asList(
+                "369",
+                "3",
+                "18",
+                "1348",
+                "1389",
+                "1469"
+        );
+
+        System.out.println("Original digit groupings");
+        System.out.println();
+
+        Collections.sort(cellDigits);
+        for (String digits :
+                cellDigits) {
+            System.out.println(digits);
+        }
+
+        partitionGraph.addCellDigitsCondensed(cellDigits);
+        System.out.println();
+        System.out.println("Reconstructed cell digit combinations as follows:");
+        System.out.println();
+
+        List<String> reconstructedCellDigits = partitionGraph.reconstructCellDigits4();
+        Collections.sort(reconstructedCellDigits);
+
+        for (String digits : reconstructedCellDigits) {
+            System.out.println(digits);
+        }
+
+        System.out.println();
+        System.out.println("Helper Methods: Subsets");
+        System.out.println();
+
+
+        List<String> currentDigitGroups = Arrays.asList(
+                "138",
+                "18",
+                "18",
+                "1"
+        );
+
+        int include = VALUE[1];
+        int exclude = VALUE[3];
+        List<String> subsets = partitionGraph.subsetDriver(currentDigitGroups, include, exclude);
+        Collections.sort(subsets);
+        for (String digits :
+                subsets) {
+            System.out.println(digits);
+        }
+    }
 }
